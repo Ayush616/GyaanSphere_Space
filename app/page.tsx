@@ -1,69 +1,100 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { ShieldCheck, Users, Laptop } from 'lucide-react';
+import Footer from './components/Footer';
+import Header from './components/Header';
+import HeroCarousel from './components/Carousel';
+
+export default function SaaSPlatformHome() {
+  // Animated Carousel State
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const carouselSlides = [
+    {
+      title: "Smart Seat Grid Layout",
+      subtitle: "Visual Management",
+      desc: "Instantly track seat availability, check member allocations, and manage capacity in real-time with our interactive grid matrix.",
+      badge: "Feature #1",
+      bgGradient: "from-blue-900 via-indigo-900 to-slate-900"
+    },
+    {
+      title: "Automated Expiry & Memberships",
+      subtitle: "Zero Hassle Tracking",
+      desc: "Seamlessly log Aadhaar IDs, mobile numbers, and custom subscription durations (Monthly, Quarterly, Half-Yearly) with automatic status flags.",
+      badge: "Feature #2",
+      bgGradient: "from-slate-900 via-cyan-950 to-blue-950"
+    },
+    {
+      title: "Multi-Tenant Library SaaS",
+      subtitle: "Scale Your Brand",
+      desc: "Designed for multiple library owners to register, list their study spaces, and handle administrative staff access effortlessly.",
+      badge: "SaaS Ready",
+      bgGradient: "from-indigo-950 via-slate-900 to-cyan-900"
+    }
+  ];
+
+  // Auto advance carousel every 4.5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [carouselSlides.length]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-cyan-500 selection:text-white flex flex-col justify-between">
+
+      <div>
+        {/* NAVBAR */}
+        <Header />
+
+
+
+        {/* UNIQUE DYNAMIC ANIMATED CAROUSEL CARD */}
+        <HeroCarousel />
+
+
+
+        {/* CORE PLATFORM FEATURES */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-600 mb-2">Built for Scale</h3>
+              <h4 className="text-3xl font-bold text-slate-900">Everything Your Study Space Needs</h4>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
+                <div className="bg-cyan-100 text-cyan-600 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
+                  <Laptop className="w-6 h-6" />
+                </div>
+                <h5 className="text-lg font-bold text-slate-900 mb-2">Visual Seat Grid Layout</h5>
+                <p className="text-slate-600 text-sm">Design your room layout, track occupied vs. vacant seats instantly, and assign members with one click.</p>
+              </div>
+
+              <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
+                <div className="bg-blue-100 text-blue-600 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
+                  <Users className="w-6 h-6" />
+                </div>
+                <h5 className="text-lg font-bold text-slate-900 mb-2">Membership & Expiry Tracking</h5>
+                <p className="text-slate-600 text-sm">Automated tracking of member Aadhaar details, mobile numbers, plan validity, and payment statuses.</p>
+              </div>
+
+              <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
+                <div className="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h5 className="text-lg font-bold text-slate-900 mb-2">Staff & Owner Roles</h5>
+                <p className="text-slate-600 text-sm">Assign administrative privileges to front-desk receptionists (like Umesh Sahu) while retaining owner controls[cite: 1].</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <Footer />
+
     </div>
   );
 }
