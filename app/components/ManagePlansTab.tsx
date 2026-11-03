@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useToast } from '@/app/components/ToastProvider';
 import { Tag, Plus, IndianRupee, Clock, Trash2, CheckCircle2 } from 'lucide-react';
 
 export default function ManagePlansTab({ readOnly = false }: { readOnly?: boolean }) {
+  const { showToast } = useToast();
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -46,11 +48,24 @@ export default function ManagePlansTab({ readOnly = false }: { readOnly?: boolea
         setFormData({ name: '', durationMonths: 1, price: '', description: '' });
         setShowAddForm(false);
         fetchPlans();
+        showToast({
+          type: 'success',
+          title: 'Plan created',
+          description: 'The membership plan is now available for new registrations.',
+        });
       } else {
-        alert(result.error || 'Failed to create plan.');
+        showToast({
+          type: 'error',
+          title: 'Plan creation failed',
+          description: result.error || 'Failed to create plan.',
+        });
       }
     } catch (err) {
-      alert('Network error while creating plan.');
+      showToast({
+        type: 'error',
+        title: 'Network error',
+        description: 'Unable to create the plan right now.',
+      });
     }
   };
 

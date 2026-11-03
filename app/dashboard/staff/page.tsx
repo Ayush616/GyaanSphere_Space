@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 import {
   UserCheck,
   Users,
@@ -31,6 +32,7 @@ import StaffPunchButton from '@/app/components/StaffPunchButton';
 
 export default function StaffDashboard() {
   const router = useRouter();
+  const { showToast, confirmAction } = useToast();
   const [activeTab, setActiveTab] = useState<'shift' | 'members' | 'seats' | 'plans' | 'drawer'>('shift');
   const [searchTerm, setSearchTerm] = useState('');
   const [memberFilter, setMemberFilter] = useState<'all' | 'active' | 'due' | 'expiring' | 'expired'>('all');
@@ -574,18 +576,39 @@ export default function StaffDashboard() {
 
                               <button
                                 onClick={async () => {
-                                  if (window.confirm(`Are you sure you want to remove ${member.name}? This will free up Seat #${member.seatNumber}.`)) {
-                                    try {
-                                      const res = await fetch(`/api/members/${member._id}`, { method: 'DELETE' });
-                                      const result = await res.json();
-                                      if (res.ok && result.success) {
-                                        fetchDashboardData();
-                                      } else {
-                                        alert(result.error || 'Failed to delete member.');
-                                      }
-                                    } catch (err) {
-                                      alert('Network error while deleting member.');
+                                  const confirmed = await confirmAction({
+                                    title: `Remove ${member.name}?`,
+                                    description: `This will free up Seat #${member.seatNumber}.`,
+                                    confirmLabel: 'Delete member',
+                                    cancelLabel: 'Keep member',
+                                    destructive: true,
+                                  });
+
+                                  if (!confirmed) return;
+
+                                  try {
+                                    const res = await fetch(`/api/members/${member._id}`, { method: 'DELETE' });
+                                    const result = await res.json();
+                                    if (res.ok && result.success) {
+                                      fetchDashboardData();
+                                      showToast({
+                                        type: 'success',
+                                        title: 'Member removed',
+                                        description: `${member.name} was deleted successfully.`,
+                                      });
+                                    } else {
+                                      showToast({
+                                        type: 'error',
+                                        title: 'Delete failed',
+                                        description: result.error || 'Failed to delete member.',
+                                      });
                                     }
+                                  } catch (err) {
+                                    showToast({
+                                      type: 'error',
+                                      title: 'Network error',
+                                      description: 'Unable to delete the member right now.',
+                                    });
                                   }
                                 }}
                                 className="bg-red-500/10 ml-1 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all"

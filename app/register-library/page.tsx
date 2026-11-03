@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useToast } from '@/app/components/ToastProvider';
 import {
     Building2,
     User,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 
 export default function RegisterLibraryPage() {
+    const { showToast } = useToast();
     const [step, setStep] = useState(1);
     const [submitted, setSubmitted] = useState(false);
 
@@ -55,12 +57,25 @@ export default function RegisterLibraryPage() {
 
             if (response.ok && result.success) {
                 setSubmitted(true);
+                showToast({
+                    type: 'success',
+                    title: 'Library registration successful',
+                    description: 'Your library is now onboarded and ready to manage members and seats.',
+                });
             } else {
-                alert(result.error || 'Failed to register library. Please try again.');
+                showToast({
+                    type: 'error',
+                    title: 'Registration failed',
+                    description: result.error || 'Failed to register library. Please try again.',
+                });
             }
         } catch (err) {
             console.error('Submission error:', err);
-            alert('Something went wrong. Please check your network connection.');
+            showToast({
+                type: 'error',
+                title: 'Network error',
+                description: 'Something went wrong. Please check your network connection.',
+            });
         }
     };
 

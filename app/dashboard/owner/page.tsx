@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ToastProvider';
 import { Users, IndianRupee, Armchair, ShieldCheck, Loader2, Plus, LogOut } from 'lucide-react';
 import RegisterMemberModal from '@/app/components/RegisterMemberModal';
 import ModifyMemberModal from '@/app/components/ModifyMemberModal';
@@ -15,6 +16,7 @@ import CashDrawerTab from '@/app/components/CashDrawerTab';
 
 export default function OwnerDashboard() {
   const router = useRouter();
+  const { showToast, confirmAction } = useToast();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'members' | 'seats' | 'config' | 'plans' | 'drawer'>('members');
@@ -348,22 +350,42 @@ export default function OwnerDashboard() {
 
                             <button
                               onClick={async () => {
-                                if (window.confirm(`Are you sure you want to remove ${member.name}? This will free up Seat #${member.seatNumber}.`)) {
-                                  try {
-                                    const res = await fetch(`/api/members/${member._id}`, {
-                                      method: 'DELETE',
-                                    });
-                                    const result = await res.json();
+                                const confirmed = await confirmAction({
+                                  title: `Remove ${member.name}?`,
+                                  description: `This will free up Seat #${member.seatNumber}.`,
+                                  confirmLabel: 'Delete member',
+                                  cancelLabel: 'Keep member',
+                                  destructive: true,
+                                });
 
-                                    if (res.ok && result.success) {
-                                      // Refresh dashboard data instantly to update table and seat grid
-                                      fetchDashboardData();
-                                    } else {
-                                      alert(result.error || 'Failed to delete member.');
-                                    }
-                                  } catch (err) {
-                                    alert('Network error while deleting member.');
+                                if (!confirmed) return;
+
+                                try {
+                                  const res = await fetch(`/api/members/${member._id}`, {
+                                    method: 'DELETE',
+                                  });
+                                  const result = await res.json();
+
+                                  if (res.ok && result.success) {
+                                    fetchDashboardData();
+                                    showToast({
+                                      type: 'success',
+                                      title: 'Member removed',
+                                      description: `${member.name} was deleted successfully.`,
+                                    });
+                                  } else {
+                                    showToast({
+                                      type: 'error',
+                                      title: 'Delete failed',
+                                      description: result.error || 'Failed to delete member.',
+                                    });
                                   }
+                                } catch (err) {
+                                  showToast({
+                                    type: 'error',
+                                    title: 'Network error',
+                                    description: 'Unable to delete the member right now.',
+                                  });
                                 }
                               }}
                               className="bg-red-500/10 ml-1 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all"

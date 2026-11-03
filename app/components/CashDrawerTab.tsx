@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useToast } from '@/app/components/ToastProvider';
 import { Wallet, ArrowDownRight, ArrowUpRight, Plus, IndianRupee, Calendar } from 'lucide-react';
 
 export default function CashDrawerTab() {
+  const { showToast } = useToast();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -51,11 +53,24 @@ export default function CashDrawerTab() {
         setShowExpenseModal(false);
         setExpenseForm({ amount: '', personName: '', remark: '', paymentDate: new Date().toISOString().split('T')[0] });
         fetchCashData();
+        showToast({
+          type: 'success',
+          title: 'Expense recorded',
+          description: 'The cash outflow has been saved to the ledger.',
+        });
       } else {
-        alert(result.error || 'Failed to record expense.');
+        showToast({
+          type: 'error',
+          title: 'Unable to record expense',
+          description: result.error || 'Failed to record expense.',
+        });
       }
     } catch (err) {
-      alert('Network error.');
+      showToast({
+        type: 'error',
+        title: 'Network error',
+        description: 'Unable to record the expense right now.',
+      });
     }
   };
 
