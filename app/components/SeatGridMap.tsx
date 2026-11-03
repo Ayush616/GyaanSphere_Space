@@ -61,17 +61,31 @@ export default function SeatGridMap({
                         const occupant = occupiedSeatsMap.get(seatLabel);
                         const isOccupied = Boolean(occupant);
                         return (
-                            <div key={`${section.prefix}-${i + 1}`} className="relative bg-slate-950 border border-slate-800 p-3 rounded-2xl text-center" onMouseEnter={() => setHoveredSeat({ seatLabel, occupant })}
-                                onMouseLeave={() => setHoveredSeat(null)}>
-                                <span className="font-mono text-[10px] text-cyan-400 block mb-2">{seatLabel}</span>
+                            <div
+                                key={`${section.prefix}-${i + 1}`}
+                                className={`relative p-3 rounded-2xl text-center border transition-all duration-200 ${
+                                    isOccupied
+                                        ? 'bg-gradient-to-b from-red-500/15 via-red-500/8 to-slate-950 border-red-400/70 shadow-[0_0_0_1px_rgba(248,113,113,0.3)] ring-2 ring-red-500/30'
+                                        : 'bg-slate-950 border-slate-800 hover:border-emerald-500/40'
+                                }`}
+                                onMouseEnter={() => setHoveredSeat({ seatLabel, occupant })}
+                                onMouseLeave={() => setHoveredSeat(null)}
+                            >
+                                <span className={`font-mono text-[10px] block mb-2 ${isOccupied ? 'text-red-300' : 'text-cyan-400'}`}>
+                                    {seatLabel}
+                                </span>
                                 <Armchair
-                                    className={`w-5 h-5 mx-auto mb-1 ${isOccupied ? 'text-cyan-400' : 'text-slate-600'
-                                        }`}
+                                    className={`w-5 h-5 mx-auto mb-1 ${isOccupied ? 'text-red-300 drop-shadow-[0_0_8px_rgba(248,113,113,0.7)]' : 'text-slate-600'}`}
                                 />
                                 {isOccupied ? (
-                                    <span className="text-[10px] text-white font-bold truncate max-w-full px-1">
-                                        {occupant.name}
-                                    </span>
+                                    <>
+                                        <span className="inline-flex items-center justify-center rounded-full bg-red-500/15 border border-red-400/50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-red-200 mb-1">
+                                            Booked
+                                        </span>
+                                        <span className="block text-[10px] text-white font-bold truncate max-w-full px-1">
+                                            {occupant.name}
+                                        </span>
+                                    </>
                                 ) : (
                                     <span className="text-[10px] text-emerald-400 font-semibold uppercase">
                                         Available

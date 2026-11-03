@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { BookOpen, Building2, ShieldCheck, UserCheck } from 'lucide-react';
+import { BookOpen, Building2 } from 'lucide-react';
 
 interface HeaderProps {
   onOpenLoginModal?: (role: 'owner' | 'staff') => void;
@@ -36,25 +36,13 @@ export default function Header({ onOpenLoginModal }: HeaderProps) {
             Main Branch
           </Link>
 
-          {/* Owner Login Button */}
-          <button
-            onClick={() => onOpenLoginModal?.('owner')}
-            className="hidden sm:flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2.5 rounded-xl transition-all border border-slate-200"
-            title="Ayush Jaiswal (Owner Access)"
+          {/* Login Button */}
+          <Link
+            href="/login"
+            className="hidden sm:flex items-center justify-center text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 hover:from-cyan-500 hover:via-sky-500 hover:to-blue-500 px-4 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-200 border border-cyan-400/40 hover:-translate-y-0.5"
           >
-            <ShieldCheck className="w-4 h-4 text-blue-600" />
-            <span>Owner Login</span>
-          </button>
-
-          {/* Staff Login Button */}
-          <button
-            onClick={() => onOpenLoginModal?.('staff')}
-            className="hidden sm:flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2.5 rounded-xl transition-all border border-slate-200"
-            title="Umesh Sahu (Receptionist / Staff Access)"
-          >
-            <UserCheck className="w-4 h-4 text-cyan-600" />
-            <span>Staff Login</span>
-          </button>
+            Login
+          </Link>
 
           {/* List Your Library SaaS CTA */}
           <Link 
