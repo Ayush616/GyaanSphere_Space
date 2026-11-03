@@ -4,6 +4,7 @@ import Library from '@/models/Library';
 import Member from '@/models/Member';
 import { getSessionUser } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

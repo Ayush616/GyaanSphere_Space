@@ -45,7 +45,7 @@ export default function StaffDashboard() {
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [punchTime, setPunchTime] = useState<string | null>(null);
   const [punchStartedAt, setPunchStartedAt] = useState<number | null>(null);
-  const [clockTick, setClockTick] = useState<number>(Date.now());
+  const [clockTick, setClockTick] = useState<number>(0);
   const [showQrScanModal, setShowQrScanModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<any>(null);
@@ -74,6 +74,7 @@ export default function StaffDashboard() {
 
   useEffect(() => {
     fetchAttendanceStatus();
+    setClockTick(Date.now());
   }, []);
 
   const formatDuration = (milliseconds: number) => {
@@ -90,7 +91,7 @@ export default function StaffDashboard() {
 
   const todayPaymentEntries = (dashboardData?.members || []).flatMap((member: any) =>
     (member.paymentHistory || []).filter((entry: any) => {
-      const paymentDate = new Date(entry?.date ?? entry?.paymentDate ?? Date.now());
+      const paymentDate = new Date(entry?.date ?? entry?.paymentDate ?? 0);
       return !Number.isNaN(paymentDate.getTime()) && paymentDate >= todayStart && paymentDate <= todayEnd;
     }).map((entry: any) => ({ ...entry, memberName: member.name, seatNumber: member.seatNumber }))
   );
@@ -519,7 +520,10 @@ export default function StaffDashboard() {
                     </thead>
                     <tbody className="divide-y divide-slate-800/60">
                       {paginatedMembers.map((member: any) => {
-                        const getPaymentDate = (entry: any) => new Date(entry?.date ?? entry?.paymentDate ?? Date.now());
+                        const getPaymentDate = (entry: any) => {
+                          const rawDate = entry?.date ?? entry?.paymentDate;
+                          return rawDate ? new Date(rawDate) : new Date(0);
+                        };
                         const paymentHistory = Array.isArray(member.paymentHistory)
                           ? [...member.paymentHistory].sort((a: any, b: any) => getPaymentDate(b).getTime() - getPaymentDate(a).getTime())
                           : [];

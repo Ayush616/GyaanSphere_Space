@@ -304,7 +304,10 @@ export default function OwnerDashboard() {
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
                     {paginatedMembers.map((member: any) => {
-                      const getPaymentDate = (entry: any) => new Date(entry?.date ?? entry?.paymentDate ?? Date.now());
+                      const getPaymentDate = (entry: any) => {
+                        const rawDate = entry?.date ?? entry?.paymentDate;
+                        return rawDate ? new Date(rawDate) : new Date(0);
+                      };
                       const paymentHistory = Array.isArray(member.paymentHistory)
                         ? [...member.paymentHistory].sort((a: any, b: any) => getPaymentDate(b).getTime() - getPaymentDate(a).getTime())
                         : [];

@@ -9,7 +9,10 @@ interface PaymentHistoryModalProps {
 }
 
 export default function PaymentHistoryModal({ member, onClose }: PaymentHistoryModalProps) {
-  const getPaymentDate = (entry: any) => new Date(entry?.date ?? entry?.paymentDate ?? Date.now());
+  const getPaymentDate = (entry: any) => {
+    const rawDate = entry?.date ?? entry?.paymentDate;
+    return rawDate ? new Date(rawDate) : new Date(0);
+  };
 
   const paymentHistory = Array.isArray(member?.paymentHistory)
     ? [...member.paymentHistory].sort(
