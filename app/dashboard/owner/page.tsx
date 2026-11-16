@@ -12,6 +12,7 @@ import PayDueModal from '@/app/components/PayDueModal';
 import PaymentHistoryModal from '@/app/components/PaymentHistoryModal';
 import ManagePlansTab from '@/app/components/ManagePlansTab';
 import CashDrawerTab from '@/app/components/CashDrawerTab';
+import RenewMemberModal from '@/app/components/RenewMemberModal';
 
 
 export default function OwnerDashboard() {
@@ -24,6 +25,7 @@ export default function OwnerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSeatConfigModalOpen, setIsSeatConfigModalOpen] = useState(false);
   const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<any>(null);
+  const [selectedMemberForRenew, setSelectedMemberForRenew] = useState<any>(null);
   const [selectedMemberForPayment, setSelectedMemberForPayment] = useState<any>(null);
   const [selectedMemberForHistory, setSelectedMemberForHistory] = useState<any>(null);
   const [memberFilter, setMemberFilter] = useState<'all' | 'active' | 'due' | 'expiring' | 'expired'>('all');
@@ -397,6 +399,13 @@ export default function OwnerDashboard() {
                               Modify
                             </button>
 
+                            <button
+                              onClick={() => setSelectedMemberForRenew(member)}
+                              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all ml-1"
+                            >
+                              Renew
+                            </button>
+
                             {Number(member.dueAmount || 0) > 0 && (
                               <button
                                 onClick={() => setSelectedMemberForPayment(member)}
@@ -460,10 +469,21 @@ export default function OwnerDashboard() {
                       member={selectedMemberForEdit}
                       totalSeats={totalSeats}
                       seatSections={dashboardData.seatSections}
-                      onClose={() => setSelectedMemberForEdit(null)} // Close modal
+                      onClose={() => setSelectedMemberForEdit(null)}
                       onSuccess={() => {
                         setSelectedMemberForEdit(null);
-                        fetchDashboardData(); // Refresh dashboard table & metrics instantly after update
+                        fetchDashboardData();
+                      }}
+                    />
+                  )}
+
+                  {selectedMemberForRenew && (
+                    <RenewMemberModal
+                      member={selectedMemberForRenew}
+                      onClose={() => setSelectedMemberForRenew(null)}
+                      onSuccess={() => {
+                        setSelectedMemberForRenew(null);
+                        fetchDashboardData();
                       }}
                     />
                   )}
