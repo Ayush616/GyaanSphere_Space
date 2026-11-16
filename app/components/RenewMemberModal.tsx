@@ -13,6 +13,13 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
   const [selectedPlanName, setSelectedPlanName] = useState(member?.planName || '');
   const [planDuration, setPlanDuration] = useState<number>(1);
+  const [membershipEndDate, setMembershipEndDate] = useState<string>(() => {
+    const sourceDate = member?.expiryDate ? new Date(member.expiryDate) : new Date();
+    const nextDate = new Date(sourceDate);
+    nextDate.setMonth(nextDate.getMonth() + 1);
+    return nextDate.toISOString().slice(0, 10);
+  });
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Both (Cash & UPI)'>('UPI');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
   const [remark, setRemark] = useState('');
@@ -33,10 +40,17 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
 
           const defaultPlan = plans.find((plan: any) => plan.name === member?.planName) || plans[0];
           if (defaultPlan) {
+            const defaultDuration = Number(defaultPlan.durationMonths || 1);
+            const baseExpiry = member?.expiryDate ? new Date(member.expiryDate) : new Date();
+            const nextExpiry = new Date(baseExpiry);
+            nextExpiry.setMonth(nextExpiry.getMonth() + defaultDuration);
+
             setSelectedPlanName(defaultPlan.name);
-            setPlanDuration(Number(defaultPlan.durationMonths || 1));
-            setFeesPaid(Number(defaultPlan.price || 0));
-            syncPaymentAmounts('UPI', Number(defaultPlan.price || 0));
+            setPlanDuration(defaultDuration);
+            setMembershipEndDate(nextExpiry.toISOString().slice(0, 10));
+            const defaultFee = Number(defaultPlan.price || 0);
+            setFeesPaid(defaultFee);
+            syncPaymentAmounts('UPI', defaultFee);
           }
         }
       } catch (err) {
@@ -70,14 +84,23 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
     setUpiAmount(Number((amount - cashValue).toFixed(2)));
   };
 
+  const renewalBasePrice = Number(selectedPlan?.price || 0);
+  const renewalTotalFee = Math.max(0, renewalBasePrice * (1 - discountPercent / 100));
+
   useEffect(() => {
     if (!selectedPlan) return;
 
     const planPrice = Number(selectedPlan.price || 0);
-    setPlanDuration(Number(selectedPlan.durationMonths || 1));
-    setFeesPaid(planPrice);
-    syncPaymentAmounts(paymentMode, planPrice);
-  }, [selectedPlan]);
+    const defaultDuration = Number(selectedPlan.durationMonths || 1);
+    const baseExpiry = member?.expiryDate ? new Date(member.expiryDate) : new Date();
+    const nextExpiry = new Date(baseExpiry);
+    nextExpiry.setMonth(nextExpiry.getMonth() + defaultDuration);
+
+    setPlanDuration(defaultDuration);
+    setMembershipEndDate(nextExpiry.toISOString().slice(0, 10));
+    setFeesPaid(planPrice * (1 - discountPercent / 100));
+    syncPaymentAmounts(paymentMode, planPrice * (1 - discountPercent / 100));
+  }, [selectedPlan, discountPercent]);
 
   const handlePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const planName = e.target.value;
@@ -85,16 +108,23 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
 
     if (!plan) return;
 
+    const nextDuration = Number(plan.durationMonths || 1);
+    const baseExpiry = member?.expiryDate ? new Date(member.expiryDate) : new Date();
+    const nextExpiry = new Date(baseExpiry);
+    nextExpiry.setMonth(nextExpiry.getMonth() + nextDuration);
+
     setSelectedPlanName(plan.name);
-    setPlanDuration(Number(plan.durationMonths || 1));
-    setFeesPaid(Number(plan.price || 0));
-    syncPaymentAmounts(paymentMode, Number(plan.price || 0));
+    setPlanDuration(nextDuration);
+    setMembershipEndDate(nextExpiry.toISOString().slice(0, 10));
+    const computedPrice = Number(plan.price || 0) * (1 - discountPercent / 100);
+    setFeesPaid(computedPrice);
+    syncPaymentAmounts(paymentMode, computedPrice);
   };
 
   const handleModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const mode = e.target.value as 'Cash' | 'UPI' | 'Both (Cash & UPI)';
     setPaymentMode(mode);
-    syncPaymentAmounts(mode, feesPaid);
+    syncPaymentAmounts(mode, feesPaid || renewalTotalFee);
   };
 
   const handleFeesPaidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,8 +137,10 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
     e.preventDefault();
     setError(null);
 
-    const totalFee = Number(selectedPlan?.price || 0);
-    if (Number(feesPaid) < 0 || Number(feesPaid) > totalFee) {
+    const totalFee = Number(renewalTotalFee.toFixed(2));
+    const paidAmount = Number(feesPaid || 0);
+
+    if (paidAmount < 0 || paidAmount > totalFee) {
       setError(`Renewal payment must be between ₹0 and ₹${totalFee}.`);
       return;
     }
@@ -124,11 +156,12 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
           planName: selectedPlanName,
           extensionMonths: planDuration,
           totalFee,
-          feesPaid: Number(feesPaid),
+          feesPaid: paidAmount,
           paymentDate,
           paymentMode,
           cashAmount: Number(cashAmount || 0),
           upiAmount: Number(upiAmount || 0),
+          membershipEndDate,
           remark: remark || `Membership renewed for ${planDuration} month(s)`,
         }),
       });
@@ -187,10 +220,37 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
                   type="number"
                   min={0}
                   readOnly
-                  value={selectedPlan?.price || 0}
+                  value={Number(selectedPlan?.price || 0).toFixed(2)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none"
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Membership End Date</label>
+              <div className="relative">
+                <Calendar className="w-4 h-4 text-cyan-400 absolute left-3 top-3" />
+                <input
+                  type="date"
+                  value={membershipEndDate}
+                  onChange={(e) => setMembershipEndDate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Discount %</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+              />
             </div>
           </div>
 
@@ -230,7 +290,7 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
                 <input
                   type="number"
                   min={0}
-                  max={selectedPlan?.price || 0}
+                  max={renewalTotalFee}
                   value={feesPaid}
                   onChange={handleFeesPaidChange}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
