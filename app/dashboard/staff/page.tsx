@@ -225,6 +225,53 @@ export default function StaffDashboard() {
     setCurrentPage(1);
   }, [memberFilter, searchTerm]);
 
+  const getStatusBadgeClasses = (status: string) => {
+    switch (status) {
+      case 'Expired':
+        return 'bg-red-500/10 text-red-400 border border-red-500/20';
+      case 'Expiring Soon':
+        return 'bg-amber-500/10 text-amber-300 border border-amber-500/20';
+      default:
+        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+    }
+  };
+
+  const exportMembersToCsv = () => {
+    if (!filteredMembers.length) return;
+
+    const headers = ['Name', 'Seat', 'Plan', 'Mobile', 'Fees Paid', 'Due Amount', 'Start Date', 'Expiry Date', 'Status'];
+    const rows = filteredMembers.map((member: any) => [
+      member.name ?? '',
+      member.seatNumber ?? '',
+      member.planName ?? '',
+      member.mobile ?? '',
+      member.feesPaid ?? '',
+      member.dueAmount ?? '',
+      member.startDate ? new Date(member.startDate).toLocaleDateString() : '',
+      member.expiryDate ? new Date(member.expiryDate).toLocaleDateString() : '',
+      member.status ?? '',
+    ]);
+
+    const escapeCsvValue = (value: string | number) => {
+      const stringValue = String(value ?? '');
+      return /[",\n]/.test(stringValue) ? `"${stringValue.replace(/"/g, '""')}"` : stringValue;
+    };
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map(escapeCsvValue).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `members-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-cyan-400">
@@ -484,6 +531,14 @@ export default function StaffDashboard() {
                   <option value="expiring">Expiring Soon</option>
                   <option value="expired">Expired</option>
                 </select>
+                <button
+                  type="button"
+                  onClick={exportMembersToCsv}
+                  disabled={!filteredMembers.length}
+                  className="bg-slate-800 hover:bg-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-cyan-400 border border-slate-700 hover:border-cyan-500/40 px-3 py-2.5 rounded-xl text-[11px] font-semibold transition-all"
+                >
+                  Export CSV
+                </button>
               </div>
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -550,7 +605,7 @@ export default function StaffDashboard() {
                             <td className="py-4 text-slate-400">{new Date(member.startDate).toLocaleDateString()}</td>
                             <td className="py-4 text-slate-400">{new Date(member.expiryDate).toLocaleDateString()}</td>
                             <td className="py-4">
-                              <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                              <span className={`${getStatusBadgeClasses(member.status)} px-2.5 py-1 rounded-full text-[10px] font-bold`}>
                                 {member.status}
                               </span>
                             </td>
