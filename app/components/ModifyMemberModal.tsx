@@ -27,6 +27,9 @@ export default function ModifyMemberModal({ member, totalSeats, seatSections = [
   };
 
   const allSeats = generateAvailableSeats();
+  const cumulativePaid = Array.isArray(member?.paymentHistory)
+    ? member.paymentHistory.reduce((sum: number, entry: any) => sum + Number(entry?.amount || 0), 0)
+    : Number(member?.feesPaid || 0);
 
   const [formData, setFormData] = useState({
     name: member.name || '',
@@ -37,8 +40,8 @@ export default function ModifyMemberModal({ member, totalSeats, seatSections = [
     startDate: member.startDate ? member.startDate.split('T')[0] : '',
     expiryDate: member.expiryDate ? member.expiryDate.split('T')[0] : '',
     status: member.status || 'Active',
-    totalFee: member.totalFee || member.feesPaid || 0,
-    feesPaid: member.feesPaid || 0,
+    totalFee: member.totalFee || cumulativePaid || 0,
+    feesPaid: cumulativePaid || 0,
     dueAmount: member.dueAmount || 0,
     discount: member.discount || 0,
     paymentDate: new Date().toISOString().split('T')[0],

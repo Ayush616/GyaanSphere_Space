@@ -56,7 +56,13 @@ export default function StaffDashboard() {
 
   const activeLibraryId = dashboardData?.libraryId || '';
   const totalSeats = dashboardData?.totalSeats || 30;
-  const totalRevenue = dashboardData?.members?.reduce((sum: number, member: any) => sum + Number(member.feesPaid || 0), 0) || 0;
+  const getPaidTotal = (member: any) => {
+    const historyTotal = Array.isArray(member?.paymentHistory)
+      ? member.paymentHistory.reduce((sum: number, entry: any) => sum + Number(entry?.amount || 0), 0)
+      : 0;
+    return historyTotal > 0 ? historyTotal : Number(member?.feesPaid || 0);
+  };
+  const totalRevenue = dashboardData?.members?.reduce((sum: number, member: any) => sum + getPaidTotal(member), 0) || 0;
   const totalDue = dashboardData?.members?.reduce((sum: number, member: any) => sum + Number(member.dueAmount || 0), 0) || 0;
   const [attendanceStatus, setAttendanceStatus] = useState<any>(null);
 
@@ -593,7 +599,7 @@ export default function StaffDashboard() {
                             <td className="py-4 text-cyan-400 font-semibold">Seat #{member.seatNumber}</td>
                             <td className="py-4 text-slate-300">{member.planName}</td>
                             <td className="py-4 text-slate-400">{member.mobile}</td>
-                            <td className="py-4 text-emerald-400 font-bold">₹{member.feesPaid}</td>
+                            <td className="py-4 text-emerald-400 font-bold">₹{getPaidTotal(member)}</td>
                             <td className="py-4">
                               {latestPayment ? (
                                 <div className="flex flex-col">

@@ -27,10 +27,18 @@ export async function GET() {
     // Fetch all members for this library branch
     const members = await Member.find({ libraryId }).sort({ startDate: -1 });
 
+    const getPaidTotal = (member: any) => {
+      const historyTotal = Array.isArray(member?.paymentHistory)
+        ? member.paymentHistory.reduce((sum: number, entry: any) => sum + Number(entry?.amount || 0), 0)
+        : 0;
+
+      return historyTotal > 0 ? historyTotal : Number(member?.feesPaid || 0);
+    };
+
     // Calculate dynamic analytics
     const totalMembers = members.length;
     const activeMembers = members.filter(m => m.status === 'Active').length;
-    const totalRevenue = members.reduce((acc, curr) => acc + (curr.feesPaid || 0), 0);
+    const totalRevenue = members.reduce((acc, curr) => acc + getPaidTotal(curr), 0);
     const totalDue = members.reduce((acc, curr) => acc + (curr.dueAmount || 0), 0);
     const occupiedSeatsCount = members.filter(m => m.status === 'Active').length;
     const availableSeats = Math.max(0, library.totalSeats - occupiedSeatsCount);

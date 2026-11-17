@@ -33,7 +33,13 @@ export default function OwnerDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const totalSeats = dashboardData?.totalSeats || 50;
-  const totalRevenue = dashboardData?.members?.reduce((sum: number, member: any) => sum + Number(member.feesPaid || 0), 0) || 0;
+  const getPaidTotal = (member: any) => {
+    const historyTotal = Array.isArray(member?.paymentHistory)
+      ? member.paymentHistory.reduce((sum: number, entry: any) => sum + Number(entry?.amount || 0), 0)
+      : 0;
+    return historyTotal > 0 ? historyTotal : Number(member?.feesPaid || 0);
+  };
+  const totalRevenue = dashboardData?.members?.reduce((sum: number, member: any) => sum + getPaidTotal(member), 0) || 0;
   const totalDue = dashboardData?.members?.reduce((sum: number, member: any) => sum + Number(member.dueAmount || 0), 0) || 0;
 
   const activeLibraryId = dashboardData?.libraryId || '';
@@ -377,7 +383,7 @@ export default function OwnerDashboard() {
                           <td className="py-4 text-cyan-400 font-semibold">Seat #{member.seatNumber}</td>
                           <td className="py-4 text-slate-300">{member.planName}</td>
                           <td className="py-4 text-slate-400">{member.mobile}</td>
-                          <td className="py-4 text-emerald-400 font-bold">₹{member.feesPaid}</td>
+                          <td className="py-4 text-emerald-400 font-bold">₹{getPaidTotal(member)}</td>
                           <td className="py-4 text-slate-400">{new Date(member.startDate).toLocaleDateString()}</td>
                           <td className="py-4 text-slate-400">{new Date(member.expiryDate).toLocaleDateString()}</td>
                           <td className="py-4">
