@@ -130,7 +130,31 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
   const handleFeesPaidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nextAmount = Number(e.target.value) || 0;
     setFeesPaid(nextAmount);
-    syncPaymentAmounts(paymentMode, nextAmount);
+    if (paymentMode === 'Cash' || paymentMode === 'UPI') {
+      syncPaymentAmounts(paymentMode, nextAmount);
+    } else {
+      syncPaymentAmounts('Both (Cash & UPI)', nextAmount);
+    }
+  };
+
+  const handleCashAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextCash = Number(e.target.value) || 0;
+    setCashAmount(nextCash);
+
+    if (paymentMode === 'Both (Cash & UPI)') {
+      const total = Number((nextCash + upiAmount).toFixed(2));
+      setFeesPaid(total);
+    }
+  };
+
+  const handleUpiAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextUpi = Number(e.target.value) || 0;
+    setUpiAmount(nextUpi);
+
+    if (paymentMode === 'Both (Cash & UPI)') {
+      const total = Number((cashAmount + nextUpi).toFixed(2));
+      setFeesPaid(total);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,10 +162,19 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
     setError(null);
 
     const totalFee = Number(renewalTotalFee.toFixed(2));
-    const paidAmount = Number(feesPaid || 0);
+    const paidAmount = paymentMode === 'Both (Cash & UPI)'
+      ? Number((cashAmount + upiAmount).toFixed(2))
+      : Number(feesPaid || 0);
+    const normalizedCashAmount = paymentMode === 'Cash' ? paidAmount : paymentMode === 'Both (Cash & UPI)' ? Number(cashAmount || 0) : 0;
+    const normalizedUpiAmount = paymentMode === 'UPI' ? paidAmount : paymentMode === 'Both (Cash & UPI)' ? Number(upiAmount || 0) : 0;
 
     if (paidAmount < 0 || paidAmount > totalFee) {
       setError(`Renewal payment must be between ₹0 and ₹${totalFee}.`);
+      return;
+    }
+
+    if (paymentMode === 'Both (Cash & UPI)' && Number((normalizedCashAmount + normalizedUpiAmount).toFixed(2)) !== Number(paidAmount.toFixed(2))) {
+      setError('Split payment amounts must match the total amount paid.');
       return;
     }
 
@@ -159,8 +192,8 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
           feesPaid: paidAmount,
           paymentDate,
           paymentMode,
-          cashAmount: Number(cashAmount || 0),
-          upiAmount: Number(upiAmount || 0),
+          cashAmount: normalizedCashAmount,
+          upiAmount: normalizedUpiAmount,
           membershipEndDate,
           remark: remark || `Membership renewed for ${planDuration} month(s)`,
         }),
@@ -314,7 +347,7 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
                 type="number"
                 step="0.01"
                 value={cashAmount}
-                onChange={(e) => setCashAmount(Number(e.target.value) || 0)}
+                onChange={handleCashAmountChange}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
@@ -324,7 +357,7 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
                 type="number"
                 step="0.01"
                 value={upiAmount}
-                onChange={(e) => setUpiAmount(Number(e.target.value) || 0)}
+                onChange={handleUpiAmountChange}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
