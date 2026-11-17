@@ -33,6 +33,7 @@ export default function OwnerDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const totalSeats = dashboardData?.totalSeats || 50;
+  const totalRevenue = dashboardData?.members?.reduce((sum: number, member: any) => sum + Number(member.feesPaid || 0), 0) || 0;
   const totalDue = dashboardData?.members?.reduce((sum: number, member: any) => sum + Number(member.dueAmount || 0), 0) || 0;
 
   const activeLibraryId = dashboardData?.libraryId || '';
@@ -216,7 +217,7 @@ export default function OwnerDashboard() {
               <IndianRupee className="w-5 h-5" />
             </span>
           </div>
-          <h3 className="text-2xl font-extrabold text-white">₹{dashboardData.totalRevenue.toLocaleString()}</h3>
+          <h3 className="text-2xl font-extrabold text-white">₹{totalRevenue.toLocaleString()}</h3>
           <p className="text-[11px] text-emerald-400 mt-1">Live fee collections</p>
         </div>
 

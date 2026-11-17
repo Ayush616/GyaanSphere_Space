@@ -56,6 +56,7 @@ export default function StaffDashboard() {
 
   const activeLibraryId = dashboardData?.libraryId || '';
   const totalSeats = dashboardData?.totalSeats || 30;
+  const totalRevenue = dashboardData?.members?.reduce((sum: number, member: any) => sum + Number(member.feesPaid || 0), 0) || 0;
   const totalDue = dashboardData?.members?.reduce((sum: number, member: any) => sum + Number(member.dueAmount || 0), 0) || 0;
   const [attendanceStatus, setAttendanceStatus] = useState<any>(null);
 
@@ -422,7 +423,7 @@ export default function StaffDashboard() {
                   <span className="text-xs text-slate-400 font-semibold">Total Revenue</span>
                   <span className="bg-emerald-500/10 text-emerald-400 p-2 rounded-2xl"><IndianRupee className="w-5 h-5" /></span>
                 </div>
-                <h3 className="text-2xl font-extrabold text-white">₹{dashboardData?.totalRevenue?.toLocaleString() || 0}</h3>
+                <h3 className="text-2xl font-extrabold text-white">₹{totalRevenue.toLocaleString()}</h3>
                 <p className="text-[11px] text-emerald-400 mt-1">Live fee collections</p>
               </div>
 
