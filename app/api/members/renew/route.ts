@@ -14,9 +14,32 @@ export async function POST(req: Request) {
     }
 
     const parsedTotalFee = Number(totalFee || 0);
-    const parsedFeesPaid = Number(feesPaid || 0);
+    const parsedSubmittedFee = Number(feesPaid || 0);
     const parsedCashAmount = Number(cashAmount || 0);
     const parsedUpiAmount = Number(upiAmount || 0);
+
+    let parsedFeesPaid = parsedSubmittedFee;
+
+    if (paymentMode === 'Cash') {
+      parsedFeesPaid = parsedCashAmount > 0 ? parsedCashAmount : parsedSubmittedFee;
+    } else if (paymentMode === 'UPI') {
+      parsedFeesPaid = parsedUpiAmount > 0 ? parsedUpiAmount : parsedSubmittedFee;
+    } else if (paymentMode === 'Both (Cash & UPI)') {
+      parsedFeesPaid = Number((parsedCashAmount + parsedUpiAmount).toFixed(2));
+
+      if (parsedSubmittedFee > 0 && parsedFeesPaid === 0) {
+        parsedFeesPaid = parsedSubmittedFee;
+      }
+    }
+
+    parsedFeesPaid = Number(parsedFeesPaid.toFixed(2));
+
+    if (!Number.isFinite(parsedFeesPaid) || parsedFeesPaid < 0 || parsedFeesPaid > parsedTotalFee) {
+      return NextResponse.json({
+        success: false,
+        error: `Invalid renewal payment amount. Expected between ₹0 and ₹${parsedTotalFee}.`,
+      }, { status: 400 });
+    }
 
     const baseDate = membershipEndDate ? new Date(membershipEndDate) : (new Date(member.expiryDate) > new Date() ? new Date(member.expiryDate) : new Date());
     const newExpiryDate = new Date(baseDate);
@@ -33,16 +56,19 @@ export async function POST(req: Request) {
     member.feesPaid += parsedFeesPaid;
     member.dueAmount += Math.max(0, parsedTotalFee - parsedFeesPaid);
 
-    // Push to payment history log
+    // Push to payment history only when a payment was actually collected.
     const transactionDate = paymentDate ? new Date(paymentDate) : new Date();
-    member.paymentHistory.push({
-      amount: parsedFeesPaid,
-      paymentDate: transactionDate,
-      mode: paymentMode,
-      cashAmount: parsedCashAmount,
-      upiAmount: parsedUpiAmount,
-      remark: remark || `Membership renewed for ${extensionMonths || 1} month(s)`
-    });
+    if (parsedFeesPaid > 0) {
+      member.paymentHistory.push({
+        amount: parsedFeesPaid,
+        date: transactionDate,
+        paymentDate: transactionDate,
+        mode: paymentMode,
+        cashAmount: parsedCashAmount,
+        upiAmount: parsedUpiAmount,
+        remark: remark || `Membership renewed for ${extensionMonths || 1} month(s)`
+      });
+    }
 
     await member.save();
 
