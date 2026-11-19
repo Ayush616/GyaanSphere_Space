@@ -19,7 +19,7 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
     nextDate.setMonth(nextDate.getMonth() + 1);
     return nextDate.toISOString().slice(0, 10);
   });
-  const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Both (Cash & UPI)'>('UPI');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
   const [remark, setRemark] = useState('');
@@ -85,7 +85,7 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
   };
 
   const renewalBasePrice = Number(selectedPlan?.price || 0);
-  const renewalTotalFee = Math.max(0, renewalBasePrice * (1 - discountPercent / 100));
+  const renewalTotalFee = Math.max(0, renewalBasePrice - discountAmount);
 
   useEffect(() => {
     if (!selectedPlan) return;
@@ -98,9 +98,10 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
 
     setPlanDuration(defaultDuration);
     setMembershipEndDate(nextExpiry.toISOString().slice(0, 10));
-    setFeesPaid(planPrice * (1 - discountPercent / 100));
-    syncPaymentAmounts(paymentMode, planPrice * (1 - discountPercent / 100));
-  }, [selectedPlan, discountPercent]);
+    const discountedPrice = Math.max(0, planPrice - discountAmount);
+    setFeesPaid(discountedPrice);
+    syncPaymentAmounts(paymentMode, discountedPrice);
+  }, [selectedPlan, discountAmount]);
 
   const handlePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const planName = e.target.value;
@@ -116,7 +117,7 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
     setSelectedPlanName(plan.name);
     setPlanDuration(nextDuration);
     setMembershipEndDate(nextExpiry.toISOString().slice(0, 10));
-    const computedPrice = Number(plan.price || 0) * (1 - discountPercent / 100);
+    const computedPrice = Math.max(0, Number(plan.price || 0) - discountAmount);
     setFeesPaid(computedPrice);
     syncPaymentAmounts(paymentMode, computedPrice);
   };
@@ -275,13 +276,12 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Discount %</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Discount (₹)</label>
               <input
                 type="number"
                 min={0}
-                max={100}
-                value={discountPercent}
-                onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
