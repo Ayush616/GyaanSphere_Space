@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Member from '@/models/Member';
 import CashTransaction from '@/models/CashTransaction';
+import { getMemberStatus } from '@/lib/memberStatus';
 
 export async function POST(req: Request) {
   try {
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
     // Update member record
     member.planName = planName || member.planName;
     member.expiryDate = newExpiryDate;
-    member.status = 'Active';
+    member.status = getMemberStatus(newExpiryDate);
     member.totalFee += parsedTotalFee;
     member.feesPaid += parsedFeesPaid;
     member.dueAmount += Math.max(0, parsedTotalFee - parsedFeesPaid);

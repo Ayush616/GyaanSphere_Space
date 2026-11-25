@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Library from '@/models/Library';
 import Member from '@/models/Member';
 import { getSessionUser } from '@/lib/auth';
+import { getMemberStatus } from '@/lib/memberStatus';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,12 +36,18 @@ export async function GET() {
       return historyTotal > 0 ? historyTotal : Number(member?.feesPaid || 0);
     };
 
+    // Derive status from expiry date instead of trusting a stale stored status.
+    const membersWithLiveStatus = members.map((member) => {
+      const status = getMemberStatus(member.expiryDate);
+      return { ...member.toObject(), status };
+    });
+
     // Calculate dynamic analytics
-    const totalMembers = members.length;
-    const activeMembers = members.filter(m => m.status === 'Active').length;
-    const totalRevenue = members.reduce((acc, curr) => acc + getPaidTotal(curr), 0);
-    const totalDue = members.reduce((acc, curr) => acc + (curr.dueAmount || 0), 0);
-    const occupiedSeatsCount = members.filter(m => m.status === 'Active').length;
+    const totalMembers = membersWithLiveStatus.length;
+    const activeMembers = membersWithLiveStatus.filter(m => m.status === 'Active').length;
+    const totalRevenue = membersWithLiveStatus.reduce((acc, curr) => acc + getPaidTotal(curr), 0);
+    const totalDue = membersWithLiveStatus.reduce((acc, curr) => acc + (curr.dueAmount || 0), 0);
+    const occupiedSeatsCount = activeMembers;
     const availableSeats = Math.max(0, library.totalSeats - occupiedSeatsCount);
 
     return NextResponse.json({
@@ -54,7 +61,7 @@ export async function GET() {
         activeMembers,
         totalRevenue,
         totalDue,
-        members,
+        members: membersWithLiveStatus,
       },
     }, { status: 200 });
 

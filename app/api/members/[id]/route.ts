@@ -1,7 +1,7 @@
-
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Member from '@/models/Member';
+import { getMemberStatus } from '@/lib/memberStatus';
 
 export async function PUT(
   req: Request,
@@ -23,7 +23,7 @@ export async function PUT(
       seatNumber,
       startDate,
       expiryDate,
-      status,
+      // status, // Remove status from here
       totalFee,
       feesPaid,
       dueAmount,
@@ -31,6 +31,9 @@ export async function PUT(
       paymentMode,
       remark,
     } = body;
+
+    // Derive status based on expiryDate
+    const memberStatus = getMemberStatus(expiryDate);
 
     const updatedMember = await Member.findByIdAndUpdate(
       id,
@@ -44,7 +47,7 @@ export async function PUT(
         seatNumber,
         startDate: startDate ? new Date(startDate) : undefined,
         expiryDate: expiryDate ? new Date(expiryDate) : undefined,
-        status,
+        status: memberStatus, // Use the derived status here
         totalFee,
         feesPaid,
         dueAmount,

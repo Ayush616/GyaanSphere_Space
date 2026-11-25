@@ -280,8 +280,12 @@ export default function RenewMemberModal({ member, onClose, onSuccess }: RenewMe
               <input
                 type="number"
                 min={0}
+                max={renewalBasePrice}
                 value={discountAmount}
-                onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+                onChange={(e) => {
+                  const enteredDiscount = Number(e.target.value) || 0;
+                  setDiscountAmount(Math.min(Math.max(0, enteredDiscount), renewalBasePrice));
+                }}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
             </div>

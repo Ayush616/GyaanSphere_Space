@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Member from '@/models/Member';
 import CashTransaction from '@/models/CashTransaction';
+import { getMemberStatus } from '@/lib/memberStatus';
 
 export async function POST(req: Request) {
   try {
@@ -30,13 +31,16 @@ export async function POST(req: Request) {
     } = body;
 
     // Check seat occupancy
-    const existingOccupant = await Member.findOne({ libraryId, seatNumber, status: 'Active' });
-    if (existingOccupant) {
+    // Reject a seat occupied by a member whose membership is still live.
+    const seatMember = await Member.findOne({ libraryId, seatNumber });
+    if (seatMember && getMemberStatus(seatMember.expiryDate) !== 'Expired') {
       return NextResponse.json({
         success: false,
-        error: `Seat #${seatNumber} is already occupied by ${existingOccupant.name}.`
+        error: `Seat #${seatNumber} is already occupied by ${seatMember.name}.`
       }, { status: 400 });
     }
+
+    const memberStatus = getMemberStatus(expiryDate);
 
     const newMember = await Member.create({
       libraryId,
@@ -48,7 +52,7 @@ export async function POST(req: Request) {
       seatNumber,
       startDate: new Date(startDate),
       expiryDate: new Date(expiryDate),
-      status: 'Active',
+      status: memberStatus,
       totalFee: Number(totalFee),
       feesPaid: Number(feesPaid),
       dueAmount: Number(dueAmount),
