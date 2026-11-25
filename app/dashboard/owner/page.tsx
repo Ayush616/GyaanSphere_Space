@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/app/components/ToastProvider';
-import { Users, IndianRupee, Armchair, ShieldCheck, Loader2, Plus, LogOut } from 'lucide-react';
+import { Users, IndianRupee, Armchair, ShieldCheck, Loader2, Plus, LogOut, AlertCircle } from 'lucide-react';
 import RegisterMemberModal from '@/app/components/RegisterMemberModal';
 import ModifyMemberModal from '@/app/components/ModifyMemberModal';
 import SeatConfigTab from '@/app/components/SeatConfigTab';
@@ -215,7 +215,7 @@ export default function OwnerDashboard() {
       </div>
 
       {/* ANALYTICS STATS CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-5 mb-10">
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl">
           <div className="flex justify-between items-center mb-4">
             <span className="text-xs text-slate-400 font-semibold">Total Revenue</span>
@@ -271,6 +271,17 @@ export default function OwnerDashboard() {
             {Math.round((dashboardData.activeMembers / dashboardData.totalSeats) * 100)}%
           </h3>
           <p className="text-[11px] text-purple-400 mt-1">Branch utilization</p>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-xs text-slate-400 font-semibold">Expired Members</span>
+            <span className="bg-red-500/10 text-red-400 p-2 rounded-2xl">
+              <AlertCircle className="w-5 h-5" />
+            </span>
+          </div>
+          <h3 className="text-2xl font-extrabold text-white">{dashboardData.expiredMembers || 0}</h3>
+          <p className="text-[11px] text-red-400 mt-1">Memberships ended</p>
         </div>
       </div>
 

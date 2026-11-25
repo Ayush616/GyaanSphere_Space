@@ -44,7 +44,8 @@ export async function GET() {
 
     // Calculate dynamic analytics
     const totalMembers = membersWithLiveStatus.length;
-    const activeMembers = membersWithLiveStatus.filter(m => m.status === 'Active').length;
+    const activeMembers = membersWithLiveStatus.filter(m => m.status === 'Active' || m.status === 'Expiring Soon').length;
+    const expiredMembers = membersWithLiveStatus.filter(m => m.status === 'Expired').length;
     const totalRevenue = membersWithLiveStatus.reduce((acc, curr) => acc + getPaidTotal(curr), 0);
     const totalDue = membersWithLiveStatus.reduce((acc, curr) => acc + (curr.dueAmount || 0), 0);
     const occupiedSeatsCount = activeMembers;
@@ -62,6 +63,7 @@ export async function GET() {
         totalRevenue,
         totalDue,
         members: membersWithLiveStatus,
+        expiredMembers,
       },
     }, { status: 200 });
 
